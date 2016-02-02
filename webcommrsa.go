@@ -4,14 +4,13 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
-	"strings"
 	"time"
 )
 
 type WebcommRsa struct {
 }
 
-func encrypt(plainText string, pubkey int, modu int) string {
+func encrypt(plainText []byte, pubkey int, modu int) string {
 	cipherText := ""
 
 	if plen := len(plainText); plen >= 0 {
@@ -53,8 +52,10 @@ func encrypt(plainText string, pubkey int, modu int) string {
 	return cipherText
 }
 
-func decrypt(cipherText string, prikey int, modu int) string {
-	plainText := ""
+func decrypt(cipherText string, prikey int, modu int) []byte {
+	bsize := len(cipherText)
+	byteBuffer := make([]byte, bsize)
+	j := 0
 
 	for x := 0; x < len(cipherText); x += 4 {
 		if c64, err := strconv.ParseInt(cipherText[x:x+4], 16, 32); err == nil {
@@ -68,18 +69,19 @@ func decrypt(cipherText string, prikey int, modu int) string {
 					m := (code * code) % modu
 					result = (m * result) % modu
 				}
-				plainText += string(result)
 			} else {
 				result = code % modu
 				for i := half; i > 1; i-- {
 					m := (code * code) % modu
 					result = (m * result) % modu
 				}
-				plainText += string(result)
 			}
+			byteBuffer[j] = byte(result)
+			j++
 		}
-
 	}
+	plainText := byteBuffer[:j]
+
 	return plainText
 }
 
@@ -170,12 +172,14 @@ func testCrypt(testVal int, rsa []int) bool {
 	return compare == testVal
 }
 
-func GenerateKey(plainText string) ([]int, string) {
+func GenerateKey(message string) ([]int, string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	finalFlag := false
 	rsaKey := []int{0, 0, 0}
 	cipherText := ""
+
+	plainText := []byte(message)
 
 	for !finalFlag {
 		for {
@@ -209,7 +213,16 @@ func GenerateKey(plainText string) ([]int, string) {
 			cipherText = encrypt(plainText, rsaKey[0], rsaKey[2])
 			result := decrypt(cipherText, rsaKey[1], rsaKey[2])
 
-			finalFlag = strings.Compare(result, plainText) == 0
+			if len(result) != len(plainText) {
+				finalFlag = false
+			} else {
+				for i := 0; i < len(result); i++ {
+					if result[i] != plainText[i] {
+						finalFlag = false
+						break
+					}
+				}
+			}
 		}
 
 	}
