@@ -29,7 +29,7 @@ func encrypt(plainText []byte, pubkey int, modu int) string {
 			} else {
 				result = code % modu
 
-				for i := half; i > 1; i-- {
+				for i := half; i >= 1; i-- {
 					mod = (code * code) % modu
 					result = (mod * result) % modu
 				}
@@ -71,7 +71,7 @@ func decrypt(cipherText string, prikey int, modu int) []byte {
 				}
 			} else {
 				result = code % modu
-				for i := half; i > 1; i-- {
+				for i := half; i >= 1; i-- {
 					m := (code * code) % modu
 					result = (m * result) % modu
 				}
@@ -104,7 +104,7 @@ func pickPrime(against int) int {
 	p := against
 
 	for (p == against) || !isPrime(p) {
-		p = 10 + int(math.Floor(rand.Float64()*300.0))
+		p = 10 + int(math.Floor(rand.Float64()*100.0))
 	}
 	return p
 }
@@ -156,7 +156,7 @@ func reCrypt(message int, pkey int, modu int) int {
 	} else {
 		result = message % modu
 
-		for i := half; i > 1; i-- {
+		for i := half; i >= 1; i-- {
 			m := (message * message) % modu
 			result = (m * result) % modu
 		}
